@@ -11,10 +11,14 @@ class PizzaWanter:
 
 
 riaz = PizzaWanter("riaz", ["mozarella", "funghi"])
-scott = PizzaWanter("scott", ["mozarella"])
-joulia = PizzaWanter("joulia", ["funghi"])
-artemis = PizzaWanter("artemis", ["pineapple", "mozarella", "funghi"])
-rachel = PizzaWanter("rachel", ["pineapple"])
+scott = PizzaWanter("scott", ["aubergine"])
+joulia = PizzaWanter("joulia", ["aubergine"])
+artemis = PizzaWanter("artemis", ["mozarella", "courgette", "onion"])
+rachel = PizzaWanter("rachel", ["courgette"])
+monkey = PizzaWanter("monkey", ["funghi"])
+tort = PizzaWanter("tort", ["onion", "cabbage"])
+chicken = PizzaWanter("chicken", ["cabbage"])
+
 
 def createGraph(pizzaWanters):
     pizza_graph = {}
@@ -29,7 +33,6 @@ def createGraph(pizzaWanters):
                         # print(sharer.name, "willing to share", sharer.wanted_pizzas)
     return(pizza_graph)
 
-                        
 
 def bruteForce(want_graph):
     pair_graph = {}
@@ -43,8 +46,31 @@ def bruteForce(want_graph):
                 taken.append(wanter)
                 break
     return pair_graph
-            
-graph = createGraph([riaz, scott, joulia, rachel, artemis])
+
+
+def getPath(want_graph, path):
+    print(want_graph)
+    wanter = path[-1]
+    for sharer in want_graph[wanter]:
+        if sharer not in path:
+            path.append(sharer)
+            getPath(want_graph, path)
+            break
+    return path
+
+
+def augmentingPath(want_graph, initial_flow):
+    for wanter in want_graph:
+        if wanter not in initial_flow.keys() \
+           and wanter not in initial_flow.values():
+            return getPath(want_graph, [wanter])
+
+
+graph = createGraph([riaz, scott, joulia, artemis,
+                     rachel, monkey, tort, chicken])
 print(graph)
-pair_graph = bruteForce(graph)
-print(pair_graph)
+pair_flow = bruteForce(graph)
+print(pair_flow)
+augmenting_path = augmentingPath(graph, pair_flow)
+print(augmenting_path)
+
