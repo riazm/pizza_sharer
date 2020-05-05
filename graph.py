@@ -2,12 +2,21 @@ class PizzaWanter:
     def __init__(self, name, wanted_pizzas):
         self.name = name
         self.wanted_pizzas = wanted_pizzas
-        self.potential_connections = []
-        self.confirm_connection = None
+        self.connections = []
+        self.confirm_match = None
 
     def __str__(self):
-        return "wanted pizzas= " + ",".join([str(elem) for elem in self.wanted_pizzas]) \
-    + "\n" + "connections= " + ",".join([str(elem) for elem in self.connections])
+        return self.name
+
+    def print_connections(self):
+        return ",".join([str(elem.name) for elem in self.connections])
+
+    def print_match(self):
+        return self.confirm_match.name
+                                          
+    # "wanted pizzas= " + ",".join([str(elem) for elem in self.wanted_pizzas]) \
+    # + "\n" + "connections= " + ",".join([str(elem.name) for elem in self.connections]) \
+    # + "\n" + "confirmed_match=" + (self.confirm_match or "No match")
 
 
 riaz = PizzaWanter("riaz", ["mozarella", "funghi"])
@@ -22,6 +31,7 @@ edgar = PizzaWanter("edgar", ["mozarella"])
 weirdo = PizzaWanter("weirdo", ["pine apple"])
 oddboi = PizzaWanter("oddBoi", ["mozarella", "funghi", "courgette", "onion", "cabbage"])
 
+
 def createGraph(pizzaWanters):
     pizza_graph = {}
     for wanter in pizzaWanters:
@@ -31,6 +41,8 @@ def createGraph(pizzaWanters):
                 for wanted_pizza in wanter.wanted_pizzas:
                     if wanted_pizza in sharer.wanted_pizzas:
                         pizza_graph[wanter.name].append(sharer.name)
+                        wanter.connections.append(sharer)
+        print(str(wanter) + " connected to " + wanter.print_connections())
     return(pizza_graph)
 
 
@@ -42,16 +54,20 @@ def bruteForce(want_graph):
             for sharer in want_graph[wanter]:
                 if sharer not in taken:
                     matching_edges[wanter] = sharer
+                    wanter.confirm_match = sharer
                     taken.append(sharer)
                     taken.append(wanter)
+                    print(wanter)
                 break
     return matching_edges
 
 
 def getPath(want_graph, path):
     wanter = path[-1]
+    print("Adding to" + path)
     for sharer in want_graph[wanter]:
         if sharer not in path:
+            print("Foud" + sharer + "adding to path")
             path.append(sharer)
             getPath(want_graph, path)
             break
@@ -60,6 +76,7 @@ def getPath(want_graph, path):
 
 def augmentingPath(want_graph, initial_match):
     for wanter in want_graph:
+        print("Bulding path from" + wanter)
         if wanter not in initial_match.keys() \
            and wanter not in initial_match.values():
             path = getPath(want_graph, [wanter])
@@ -88,8 +105,7 @@ def subtractAugmentingPath(want_graph, initial_match, augmenting_path):
     return initial_match
 
 graph = createGraph([riaz, scott, joulia, artemis,
-                     rachel, monkey, tort, chicken,
-                     edgar, weirdo, oddboi])
+                     rachel, monkey, tort, chicken])
 print("graph", graph)
 initial_matching_edges = bruteForce(graph)
 print("initial matching", initial_matching_edges)
@@ -100,8 +116,9 @@ while True:
     if augmenting_path == None:
         break
     else: 
-        matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path)
+        initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path)
+        print("matching edges", initial_matching_edges)
 
 
-print("subtracted_path", matching_edges)
+print("subtracted_path", initial_matching_edges)
 
