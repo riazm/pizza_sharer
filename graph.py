@@ -83,10 +83,8 @@ def brute_force(pizzaWanters):
 
 def getPath(want_graph, path):
     wanter = path[-1]
-    print("Adding to" + path)
     for sharer in want_graph[wanter]:
         if sharer not in path:
-            print("Foud" + sharer + "adding to path")
             path.append(sharer)
             getPath(want_graph, path)
             break
@@ -117,7 +115,7 @@ def get_path(pizzaWanters, path):
                 print(path)
                 return path
 
-def augmenting_path(pizzaWanters):
+def get_augmenting_path(pizzaWanters):
     for wanter in pizzaWanters:
         print("Bulding path from " + str(wanter))
         if wanter.match is None:
@@ -126,10 +124,8 @@ def augmenting_path(pizzaWanters):
                 return path
     return None
 
-
 def augmentingPath(want_graph, initial_match):
     for wanter in want_graph:
-        print("Bulding path from" + wanter)
         if wanter not in initial_match.keys() \
            and wanter not in initial_match.values():
             path = getPath(want_graph, [wanter])
@@ -156,6 +152,24 @@ def subtractAugmentingPath(want_graph, initial_match, augmenting_path):
     initial_match.update(augmented_match)
     return initial_match
 
+def subtract_augumenting_path(pizzaWanters, augmentingPath):
+    while len(augmentingPath) > 1:
+        node = augmentingPath.pop()
+        if node.match == None:
+            print("Inverting non match between " + str(node) + " & " + str(augmentingPath[-1]))
+            node.match = augmentingPath[-1]
+            augmentingPath[-1].match = node
+        elif node.match == augmentingPath[-1]:
+            print("Inverting match between " + str(node) + " & " + str(augmentingPath[-1]))
+            node.match = None
+            augmentingPath[-1].match = None
+        elif node.match != augmentingPath[-1]:
+            print("Completing inversion between " + str(node) +"  & "+ str(augmentingPath[-1]))
+            augmentingPath[-1].match = None
+        else:
+            print("Match not next augmented path, error")
+
+    return pizzaWanters
 
 pizzaWanters = [riaz, scott, joulia, artemis,
                      rachel, monkey, tort, chicken]
@@ -168,14 +182,17 @@ for wanter in pizzaWanters:
     print(str(wanter) + ": " + wanter.get_match_name())
 
 while True:
-    augmenting_path = augmenting_path(pizzaWanters)
+    augmenting_path = get_augmenting_path(pizzaWanters)
     print("augmenting path", augmenting_path)
-    if augmenting_path == None:
+    augmenting_path_list = augmentingPath(graph, initial_matching_edges)
+    #    print("augmenting path", augmenting_path_list)
+    if augmenting_path_list == None:
         break
     else:
-        initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path)
-        print("matching edges", initial_matching_edges)
+        initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path_list)
+        augmented_pizzaWanters = subtract_augumenting_path(pizzaWanters, augmenting_path)
 
-
-print("subtracted_path", initial_matching_edges)
+print("final matching edges")
+for wanter in augmented_pizzaWanters:
+    print(str(wanter) + ": " + wanter.get_match_name())
 
