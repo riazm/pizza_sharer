@@ -6,10 +6,10 @@ class PizzaWanter:
         self.match = None
 
     def __str__(self):
-        return self.name
+        return "PizzaWanter: " + self.name
 
     def __repr__(self):
-        return self.name
+        return "PizzaWanter: " + self.name
 
     def get_connection_names(self):
         return ",".join([str(elem.name) for elem in self.connections])
@@ -25,95 +25,95 @@ class PizzaWanter:
     # + "\n" + "confirmed_match=" + (self.match or "No match")
 
 
-riaz = PizzaWanter("riaz", ["mozarella", "funghi"])
-scott = PizzaWanter("scott", ["aubergine"])
-joulia = PizzaWanter("joulia", ["aubergine"])
-artemis = PizzaWanter("artemis", ["mozarella", "courgette", "onion"])
-rachel = PizzaWanter("rachel", ["courgette"])
-monkey = PizzaWanter("monkey", ["funghi"])
-tort = PizzaWanter("tort", ["onion", "cabbage"])
-chicken = PizzaWanter("chicken", ["cabbage"])
-edgar = PizzaWanter("edgar", ["mozarella"])
-weirdo = PizzaWanter("weirdo", ["pine apple"])
-oddboi = PizzaWanter("oddBoi", ["mozarella", "funghi", "courgette", "onion", "cabbage"])
+riaz = PizzaWanter("riaz", {"mozarella", "funghi"})
+scott = PizzaWanter("scott", {"aubergine"})
+joulia = PizzaWanter("joulia", {"aubergine"})
+artemis = PizzaWanter("artemis", {"mozarella", "courgette", "onion"})
+rachel = PizzaWanter("rachel", {"courgette"})
+monkey = PizzaWanter("monkey", {"funghi"})
+tort = PizzaWanter("tort", {"onion", "cabbage"})
+chicken = PizzaWanter("chicken", {"cabbage"})
+edgar = PizzaWanter("edgar", {"mozarella"})
+weirdo = PizzaWanter("weirdo", {"pine apple"})
+oddboi = PizzaWanter("oddBoi", {"mozarella", "funghi", "courgette", "onion", "cabbage"})
 
 
-def createGraph(pizzaWanters):
+#Create an adjacency matrix of pizza wanters
+def create_graph(pizzaWanters):
+    # check we have even number of wanters first
+    if len(pizzaWanters)%2 != 0:
+        print("error not equal number of pizza ppl, this graph will never match")
+        
     pizza_graph = {}
     for wanter in pizzaWanters:
         pizza_graph[wanter.name] = []
         for sharer in pizzaWanters:
             if sharer != wanter:
-                for wanted_pizza in wanter.wanted_pizzas:
-                    if wanted_pizza in sharer.wanted_pizzas:
-                        pizza_graph[wanter.name].append(sharer.name)
-                        wanter.connections.append(sharer)
-        # print(str(wanter) + " connected to " + wanter.get_connection_names())
+                if wanter.wanted_pizzas & sharer.wanted_pizzas:
+                    pizza_graph[wanter.name].append(sharer.name)
+                    wanter.connections.append(sharer.name)
+
+    for wanter in pizza_graph:
+        print(wanter + "\t:" + str(pizza_graph[wanter]))
     return(pizza_graph)
 
-
-def bruteForce(want_graph):
-    matching_edges = {}
+# get a brute force matching
+def brute_force(graph):
+    matching = {}
     taken = []
-    for wanter in want_graph:
+    for wanter in graph:
         if wanter not in taken:
-            for sharer in want_graph[wanter]:
+            matching[wanter] = None
+            for sharer in graph[wanter]:
                 if sharer not in taken:
-                    matching_edges[wanter] = sharer
+                    matching[wanter] = sharer
+                    matching[sharer] = wanter
                     taken.append(sharer)
                     taken.append(wanter)
                 break
-    return matching_edges
+    return matching
 
-def brute_force(pizzaWanters):
-    matching_edges = {}
-    taken = []
-    for wanter in pizzaWanters:
-        if wanter not in taken:
-            for sharer in wanter.connections:
-                if sharer not in taken:
-                    wanter.match = sharer
-                    sharer.match = wanter
-                    taken.append(sharer)
-                    taken.append(wanter)
-                    # print(str(wanter) + " matched to " + wanter.get_match_name())
+def get_path(graph, matching_graph, path=[]):
+    if path == []:
+        for node in graph:
+            # Pick an initial node with no matches and find a connection
+            # that has a match
+            if matching_graph[node] == None:
+                path.append(node)
                 break
-    return matching_edges
-
-
-def getPath(want_graph, path):
-    wanter = path[-1]
-    for sharer in want_graph[wanter]:
-        if sharer not in path:
-            path.append(sharer)
-            getPath(want_graph, path)
-            break
+    print("current path: " + str(path))
+    initial_node = path[-1]
+    for connected_node in graph[initial_node]:
+        print("checking node " + connected_node)
+        if matching_graph[connected_node] != None:
+            if matching_graph[connected_node] not in path:
+                print("matched node not in path, add it and continue searching")
+                path.append(connected_node)
+                path.append(matching_graph[connected_node])
+                path = get_path(graph, matching_graph, path)
+                break
+            else:
+                print("matched node already in path, continue searching")
+        else:
+            if matching_graph[connected_node] not in path:
+                print("Unmatched node not in path, append and return current path")
+                path.append(connected_node)
+                break
+            else:
+                print("unmatched node already in path, keep searching")
+                
     return path
 
-def get_path(pizzaWanters, path):
-    # would be better to use from collections import deque
-    queue = [path[-1]]
-    discovered = []
-    while queue:
-        currentNode = queue.pop(0)
-        print("current node is " + str(currentNode))
-        print("queue is" + str(queue))
-        for connection in currentNode.connections:
-            print("examining connection " + str(connection))
-            if connection is currentNode.match:
-                print("connection is the current match, ignore")
-            elif connection in path:
-                print("connection in discovered already, cycle?")
-            elif connection.match:
-                print("connection has a match " + str(connection.match))
-                path.append(connection)
-                path.append(connection.match)
-                queue.append(connection.match)
-            else:
-                print("Found free node " + str(connection) + " returning path")
-                path.append(connection)
-                print(path)
-                return path
+                
+pizzaWanters = [riaz, scott, joulia, artemis,
+                     rachel, monkey, tort, chicken]
+
+graph = create_graph(pizzaWanters)
+initial_matching = brute_force(graph)
+path = get_path(graph, initial_matching)
+print("path is "+ str(path))
+
+            
 
 def get_augmenting_path(pizzaWanters):
     for wanter in pizzaWanters:
@@ -171,28 +171,27 @@ def subtract_augumenting_path(pizzaWanters, augmentingPath):
 
     return pizzaWanters
 
-pizzaWanters = [riaz, scott, joulia, artemis,
-                     rachel, monkey, tort, chicken]
-graph = createGraph(pizzaWanters)
-print("graph", graph)
-initial_matching_edges = bruteForce(graph)
-brute_force(pizzaWanters)
-print("initial matching")
-for wanter in pizzaWanters:
-    print(str(wanter) + ": " + wanter.get_match_name())
 
-while True:
-    augmenting_path = get_augmenting_path(pizzaWanters)
-    print("augmenting path", augmenting_path)
-    augmenting_path_list = augmentingPath(graph, initial_matching_edges)
-    #    print("augmenting path", augmenting_path_list)
-    if augmenting_path_list == None:
-        break
-    else:
-        initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path_list)
-        augmented_pizzaWanters = subtract_augumenting_path(pizzaWanters, augmenting_path)
+    
 
-print("final matching edges")
-for wanter in augmented_pizzaWanters:
-    print(str(wanter) + ": " + wanter.get_match_name())
+# initial_matching_edges = bruteForce(graph)
+# brute_force(pizzaWanters)
+# print("initial matching")
+# for wanter in pizzaWanters:
+#     print(str(wanter) + ": " + wanter.get_match_name())
+
+# while True:
+#     augmenting_path = get_augmenting_path(pizzaWanters)
+#     print("augmenting path", augmenting_path)
+#     augmenting_path_list = augmentingPath(graph, initial_matching_edges)
+#     #    print("augmenting path", augmenting_path_list)
+#     if augmenting_path_list == None:
+#         break
+#     else:
+#         initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path_list)
+#         augmented_pizzaWanters = subtract_augumenting_path(pizzaWanters, augmenting_path)
+
+# print("final matching edges")
+# for wanter in augmented_pizzaWanters:
+#     print(str(wanter) + ": " + wanter.get_match_name())
 
