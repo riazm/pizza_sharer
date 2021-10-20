@@ -99,8 +99,17 @@ def get_path(graph, matching_graph, path=[]):
         for connected_node in graph[initial_node]:
             print("current node " + initial_node)
             print("Checking node " + connected_node)
-            if connected_node in path:
-                print("node already in path, ignore")
+            if connected_node in path and connected_node != path[-2]:
+                cycle = []
+                for node in reversed(path):
+                    if node != connected_node:
+                        cycle.append(node)
+                if len(cycle) % 2 == 0:
+                    print(cycle)
+                    shrink_cycle(graph, path, cycle)
+                    return "ODD cycle detected!"
+            elif connected_node in path and connected_node == path[-2]:
+                print("last node, ignore")
             elif matching_graph[connected_node] == None:
                     print("Found free node, connect and return path")
                     print((path) + [connected_node])
@@ -112,11 +121,30 @@ def get_path(graph, matching_graph, path=[]):
         print("Done searching from " + initial_node)
         print(path)
 
+def shrink_cycle(graph, path, cycle):
+    cycle_root = cycle[0]
+    contracted_graph = {}
+    print(cycle_root)
+    for node in graph:
+        print("node " + node)
+        if node == cycle_root:
+            contracted_graph[node] = graph[node].difference(cycle)
+            print("Set cycle root " + node + " to " + str(contracted_graph[node]))            
+        elif node in cycle:
+            print("what")
+        elif graph[node].difference(cycle) != graph[node]:
+            contracted_graph[node] = graph[node].difference(cycle)
+            contracted_graph[node].add(cycle_root)
+            print(contracted_graph[node])
+        else:
+            print("why am i here")
+    return contracted_graph
+    
 def augment_path(path, match_graph):
     for index,node in enumerate(path):
         if match_graph[node] == None:
             try:
-                print("setting match to forward node")
+                print("Must be first node, set match to next")
                 match_graph[node] = path[index+1]
             except IndexError:
                 print("unable to set to forward node, must be last node")
@@ -147,87 +175,4 @@ for wanter in initial_matching:
 path = get_path(graph, initial_matching)
 print("path is "+ str(path))
 
-
-
-            
-
-def get_augmenting_path(pizzaWanters):
-    for wanter in pizzaWanters:
-        print("Bulding path from " + str(wanter))
-        if wanter.match is None:
-            path = get_path(pizzaWanters, [wanter])
-            if len(path) > 1:
-                return path
-    return None
-
-def augmentingPath(want_graph, initial_match):
-    for wanter in want_graph:
-        if wanter not in initial_match.keys() \
-           and wanter not in initial_match.values():
-            path = getPath(want_graph, [wanter])
-            if len(path) > 1:
-                return path
-    return None
-
-def subtractAugmentingPath(want_graph, initial_match, augmenting_path):
-    augmented_match = {}
-    for share_pair in zip(augmenting_path, augmenting_path[1:]):
-        wanter = share_pair[0]
-        sharer = share_pair[1]
-        if wanter in initial_match.keys():
-            if initial_match[wanter] == sharer:
-                print("Error, wanter - sharer path already exists", wanter, sharer)
-        elif wanter in initial_match.values():
-            for node in want_graph[wanter]:
-                connection = initial_match.get(node)
-                if connection == wanter:
-                    initial_match.pop(node)
-        else:
-            augmented_match[wanter] = sharer
-
-    initial_match.update(augmented_match)
-    return initial_match
-
-def subtract_augumenting_path(pizzaWanters, augmentingPath):
-    while len(augmentingPath) > 1:
-        node = augmentingPath.pop()
-        if node.match == None:
-            print("Inverting non match between " + str(node) + " & " + str(augmentingPath[-1]))
-            node.match = augmentingPath[-1]
-            augmentingPath[-1].match = node
-        elif node.match == augmentingPath[-1]:
-            print("Inverting match between " + str(node) + " & " + str(augmentingPath[-1]))
-            node.match = None
-            augmentingPath[-1].match = None
-        elif node.match != augmentingPath[-1]:
-            print("Completing inversion between " + str(node) +"  & "+ str(augmentingPath[-1]))
-            augmentingPath[-1].match = None
-        else:
-            print("Match not next augmented path, error")
-
-    return pizzaWanters
-
-
-    
-
-# initial_matching_edges = bruteForce(graph)
-# brute_force(pizzaWanters)
-# print("initial matching")
-# for wanter in pizzaWanters:
-#     print(str(wanter) + ": " + wanter.get_match_name())
-
-# while True:
-#     augmenting_path = get_augmenting_path(pizzaWanters)
-#     print("augmenting path", augmenting_path)
-#     augmenting_path_list = augmentingPath(graph, initial_matching_edges)
-#     #    print("augmenting path", augmenting_path_list)
-#     if augmenting_path_list == None:
-#         break
-#     else:
-#         initial_matching_edges = subtractAugmentingPath(graph, initial_matching_edges, augmenting_path_list)
-#         augmented_pizzaWanters = subtract_augumenting_path(pizzaWanters, augmenting_path)
-
-# print("final matching edges")
-# for wanter in augmented_pizzaWanters:
-#     print(str(wanter) + ": " + wanter.get_match_name())
 

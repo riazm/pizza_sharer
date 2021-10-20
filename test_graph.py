@@ -8,6 +8,29 @@ graph = {"monkey"  : set(['riaz']),
          "chicken" : set(['tort']),
          "joulia"  : set(['scott'])}
 
+def test_cycle_contraction():
+    graph = {"a": set(["b"]),
+             "b": set(["d", "c", "a"]),
+             "c": set(["b", "d"]),
+             "d": set(["c", "b"])}
+
+    path = ["a", "b", "c", "d", "b"]
+    cycle = ["b", "c", "d", "b"]
+    collapsed_path = pizza_graph.shrink_cycle(graph, path, cycle) # odd
+    assert path == "ODD cycle detected!"
+
+# def test_odd_cycle():
+#     graph = {
+#              "b": set(["d", "c"]),
+#              "c": set(["b", "d"]),
+#              "d": set(["c", "b"])}
+
+#     matching = {
+#                 "b": "c",
+#                 "c": "b",
+#                 "d": None}
+#     path = (pizza_graph.get_path(graph, matching, ["d"]))
+#     assert path == "ODD cycle detected!"
 
 def test_path_1():
     matching = {"riaz": "artemis",
